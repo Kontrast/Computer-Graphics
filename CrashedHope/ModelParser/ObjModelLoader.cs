@@ -36,7 +36,7 @@ namespace ModelParser
         {
 	        Model result = null;
 
-            ObjLoader loader = new ObjLoader();
+			ObjLoader loader = new ObjLoader();
 	        MeshData modelData = loader.LoadFile(filePath);
 
 	        if (modelData != null)
