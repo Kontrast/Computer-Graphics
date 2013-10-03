@@ -46,19 +46,30 @@ namespace CrashedHope
             //  Rotate around the Y axis.
             gl.Rotate(rotation, 0.0f, 1.0f, 0.0f);
 
-			//  Draw a coloured pyramid.
+			
             gl.Begin(OpenGL.GL_TRIANGLES);
-            gl.Color(1.0f, 0.0f, 0.0f);
 
+			//  Draw ground
+			gl.Color(0.0f, 1.0f, 0.0f);
+			gl.Vertex(-25.0f, 0.0f, -25.0f);
+			gl.Vertex(-25.0f, 0.0f, 25.0f);
+			gl.Vertex(25.0f, 0.0f, -25.0f);
+			gl.Vertex(25.0f, 0.0f, 25.0f);
+			gl.Vertex(-25.0f, 0.0f, 25.0f);
+			gl.Vertex(25.0f, 0.0f, -25.0f);
+
+			//  Draw a tower crane
+			gl.Color(0.7890625f, 0.71484375f, 0.046875f);
+			
 	        Vector3[] vertices = model.Data.Vertices;
-	        foreach (Tri tri in model.Data.Tris) {
-		        Vector3 vertice1 = vertices[tri.P1.Vertex];
-				Vector3 vertice2 = vertices[tri.P2.Vertex];
-				Vector3 vertice3 = vertices[tri.P3.Vertex];
-		        gl.Vertex(vertice1.X, vertice1.Y , vertice1.Z);
-				gl.Vertex(vertice2.X, vertice2.Y, vertice2.Z);
-				gl.Vertex(vertice3.X, vertice3.Y, vertice3.Z);
-	        }
+			foreach (Tri tri in model.Data.Tris) {
+		       Vector3 vertice1 = vertices[tri.P1.Vertex];
+			   Vector3 vertice2 = vertices[tri.P2.Vertex];
+			   Vector3 vertice3 = vertices[tri.P3.Vertex];
+			   gl.Vertex(vertice1.X, vertice1.Y, vertice1.Z);
+			   gl.Vertex(vertice2.X, vertice2.Y, vertice2.Z);
+			   gl.Vertex(vertice3.X, vertice3.Y, vertice3.Z);
+		    }
             gl.End();
 
             //  Nudge the rotation.
@@ -106,7 +117,7 @@ namespace CrashedHope
             gl.Perspective(60.0f, (double)Width / (double)Height, 0.01, 100.0);
 
             //  Use the 'look at' helper function to position and aim the camera.
-            gl.LookAt(-30, 30, -30, 0, 10, 0, 0, 1, 0);
+            gl.LookAt(-20, 20, -20, 0, 10, 0, 0, 1, 0);
 
             //  Set the modelview matrix.
             gl.MatrixMode(OpenGL.GL_MODELVIEW);
