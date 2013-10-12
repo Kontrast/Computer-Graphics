@@ -6,6 +6,6 @@
     <Grid>
         <sharpGL:OpenGLControl
                OpenGLDraw="OpenGLControl_OpenGLDraw" OpenGLInitialized="OpenGLControl_OpenGLInitialized"
-               RenderContextType="FBO" />
+               RenderContextType="FBO" DrawFPS="True"/>
     </Grid>
 </Window>

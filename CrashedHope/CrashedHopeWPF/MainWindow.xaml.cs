@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using SharpGL.SceneGraph;
 using SharpGL;
+using ModelParser;
 
 namespace CrashedHopeWPF
 {
@@ -21,7 +22,7 @@ namespace CrashedHopeWPF
     /// </summary>
     public partial class MainWindow : Window
     {
-
+        private Model model;
         float[] vertices;
         uint[] indices;
         // used for storing the id of the vbo
@@ -47,10 +48,9 @@ namespace CrashedHopeWPF
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
             gl.LoadIdentity();
 
-            // point the camera at the center of the world 0,0,0 and move back 2, up 3 and over 2
-            gl.LookAt(3, 0.5f, 3, 0, 0.5f, 0, 0, 1, 0);
+            gl.LookAt(-20, 20, -20, 0, 10, 0, 0, 1, 0);
             // Set the color to
-            gl.Color(0.85f, 0.41f, 0, 1f);
+            gl.Color(0.7890625f, 0.71484375f, 0.046875f);
 
             gl.Rotate(0, rotation++, rotation / 2);
 
@@ -70,6 +70,9 @@ namespace CrashedHopeWPF
         /// <param name="args">The <see cref="SharpGL.SceneGraph.OpenGLEventArgs"/> instance containing the event data.</param>
         private void OpenGLControl_OpenGLInitialized(object sender, OpenGLEventArgs args)
         {
+            ObjModelLoader modelLoader = new ObjModelLoader();
+            model = modelLoader.LoadModel(@"..\..\..\CrashedHope\Resources\Tower crane_optimized.obj");
+
             OpenGL gl = args.OpenGL;
 
             gl.Enable(OpenGL.GL_DEPTH_TEST);
@@ -77,24 +80,26 @@ namespace CrashedHopeWPF
 
             gl.Hint(OpenGL.GL_PERSPECTIVE_CORRECTION_HINT, OpenGL.GL_NICEST);
 
-            vertices = new float[]
-            {                
-                0, 0, 0, // 0 bottom back left
-                1, 0, 0, // 1 bottom front left
-                1, 1, 0, // 2 top front left
-                0, 1, 0, // 3 top back left
-                1, 0, 1, // 4 bottom front right
-                1, 1, 1, // 5 top front right
-            };
+            vertices = new float[model.Data.Vertices.Count() * 3];
+            indices = new uint[model.Data.Tris.Count() * 3];
 
-            indices = new uint[]
+            int i = 0;
+            foreach (var vertice in model.Data.Vertices)
             {
-                0, 1, 2, // left bottom triangle
-                2, 3, 0,  // left top triangle
-                1, 4, 5, // front bottom triangle
-                5, 1, 2, // front top triangle
-            };
-
+                vertices[i] = (float)vertice.X;
+                vertices[i + 1] = (float)vertice.Y;
+                vertices[i + 2] = (float)vertice.Z;
+                i += 3;
+            }
+            i = 0;
+            foreach (var ind in model.Data.Tris)
+            {
+                indices[i] = (uint)ind.P1.Vertex;
+                indices[i + 1] = (uint)ind.P2.Vertex;
+                indices[i + 2] = (uint)ind.P3.Vertex;
+                i += 3;
+            }
+            
             gl.GenBuffers(1, vertexBufferObjectIds);
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, vertexBufferObjectIds[0]);
 
