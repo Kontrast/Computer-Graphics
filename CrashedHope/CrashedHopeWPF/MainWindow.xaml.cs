@@ -71,7 +71,7 @@ namespace CrashedHopeWPF
         private void OpenGLControl_OpenGLInitialized(object sender, OpenGLEventArgs args)
         {
             ObjModelLoader modelLoader = new ObjModelLoader();
-            model = modelLoader.LoadModel(@"..\..\..\CrashedHope\Resources\Tower crane_optimized.obj");
+            model = modelLoader.LoadModel(@"..\..\Resources\Tower crane_optimized.obj");
 
             OpenGL gl = args.OpenGL;
 

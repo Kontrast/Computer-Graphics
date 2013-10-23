@@ -108,6 +108,11 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <None Include="Resources\Tower crane_boomWithCabin.obj" />
+    <None Include="Resources\Tower crane_hook.obj" />
+    <None Include="Resources\Tower crane_optimized.obj" />
+    <None Include="Resources\Tower crane_platform.obj" />
+    <None Include="Resources\Tower crane_tower.obj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
