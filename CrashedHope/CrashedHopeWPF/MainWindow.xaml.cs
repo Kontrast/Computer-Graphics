@@ -22,7 +22,10 @@ namespace CrashedHopeWPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Model model;
+        private Model towerModel;
+        private Model boomModel;
+        private Model hookModel;
+        private Model platformModel;
         float[] vertices;
         uint[] indices;
         // used for storing the id of the vbo
@@ -71,8 +74,19 @@ namespace CrashedHopeWPF
         private void OpenGLControl_OpenGLInitialized(object sender, OpenGLEventArgs args)
         {
             ObjModelLoader modelLoader = new ObjModelLoader();
-            model = modelLoader.LoadModel(@"..\..\Resources\Tower crane_optimized.obj");
+            towerModel = modelLoader.LoadModel(@"..\..\Resources\Tower crane_tower.obj");
+            boomModel = modelLoader.LoadModel(@"..\..\Resources\Tower crane_boomWithCabin.obj");
+            hookModel = modelLoader.LoadModel(@"..\..\Resources\Tower crane_hook.obj");
+            platformModel = modelLoader.LoadModel(@"..\..\Resources\Tower crane_platform.obj");
 
+            AddBuffer(towerModel, args);
+            AddBuffer(boomModel, args);
+            AddBuffer(hookModel, args);
+            AddBuffer(platformModel, args);
+        }
+
+        private void AddBuffer(Model model, OpenGLEventArgs args)
+        {
             OpenGL gl = args.OpenGL;
 
             gl.Enable(OpenGL.GL_DEPTH_TEST);
@@ -99,7 +113,7 @@ namespace CrashedHopeWPF
                 indices[i + 2] = (uint)ind.P3.Vertex;
                 i += 3;
             }
-            
+
             gl.GenBuffers(1, vertexBufferObjectIds);
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, vertexBufferObjectIds[0]);
 
@@ -112,6 +126,5 @@ namespace CrashedHopeWPF
                 }
             }
         }
-
     }
 }
