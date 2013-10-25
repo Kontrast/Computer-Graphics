@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -37,7 +38,9 @@ namespace CrashedHopeWPF
         uint[] vertexBufferObjectIds = new uint[4];
         uint[] normalBufferObjectIds = new uint[4];
 
-        float rotation = 0;
+        float boomRotation = 0;
+
+        private long baseTime;
 
         public MainWindow()
         {
@@ -62,6 +65,7 @@ namespace CrashedHopeWPF
             // Set the color to
             gl.Color(0.7890625f, 0.71484375f, 0.046875f);
 
+
             DrawBuffers(0, args);
             DrawBuffers(3, args);
             DrawBuffers(1, args);
@@ -72,7 +76,12 @@ namespace CrashedHopeWPF
         private void DrawBuffers(int bufferNum, OpenGLEventArgs args)
         {
             OpenGL gl = args.OpenGL;
-            Animate(bufferNum, args);
+            
+            //Animate(bufferNum, args);
+            gl.Translate(0, 0, 4); //Zoom out by 10
+            gl.Rotate(0, 1, 0, 0); // Rotate about the X axis
+            gl.Rotate(45, 0, 1, 0); // Rotate about the Y axis
+            gl.PushMatrix();
             gl.EnableClientState(OpenGL.GL_NORMAL_ARRAY);
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, normalBufferObjectIds[bufferNum]);
             gl.NormalPointer(OpenGL.GL_FLOAT, 0, new IntPtr(0));
@@ -83,27 +92,27 @@ namespace CrashedHopeWPF
             gl.VertexAttribPointer(0, 3, OpenGL.GL_FLOAT, false, 0, new IntPtr(0));
 
             gl.DrawElements(OpenGL.GL_TRIANGLES, indices.ElementAt(bufferNum).Length, indices.ElementAt(bufferNum));
+            gl.Translate(0, 0, 0); // move object to centre
+           
+            gl.PopMatrix();
         }
 
         private void Animate(int bufferNum, OpenGLEventArgs args)
         {
             OpenGL gl = args.OpenGL;
-
-            if (bufferNum == 1)
+            if (baseTime == 0)
             {
-                gl.Rotate(0, rotation++, rotation / 2);
+                baseTime = DateTime.Now.Ticks;
             }
-            else
+            long time = DateTime.Now.Ticks - baseTime;
+            if (bufferNum == 1 || bufferNum == 2)
             {
-                gl.Rotate(0,0,1);
+                gl.Translate(0, -14, 0);
+                gl.Rotate(0, 0, boomRotation);
+                boomRotation = (float)time / 1000000;
+                gl.Translate(0, 14, 0);
+                
             }
-           
-            //gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, vertexBufferObjectIds[bufferNum]);
-            //Vertex.X:=sin(time);
-            //Vertex.Y:=1;
-            //Vertex.Z:=0;
-            //gl.BufferSubData(OpenGL.GL_ARRAY_BUFFER, 0, SizeOf(Vertex), @Vertex);
-            //glBindBuffer(GL_ARRAY_BUFFER,0);
         }
 
         /// <summary>
