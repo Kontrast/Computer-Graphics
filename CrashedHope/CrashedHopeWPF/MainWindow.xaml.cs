@@ -40,7 +40,6 @@ namespace CrashedHopeWPF
 
         float boomRotation = 0;
 
-        private long baseTime;
 
         public MainWindow()
         {
@@ -76,12 +75,10 @@ namespace CrashedHopeWPF
         private void DrawBuffers(int bufferNum, OpenGLEventArgs args)
         {
             OpenGL gl = args.OpenGL;
-            
-            //Animate(bufferNum, args);
-            gl.Translate(0, 0, 4); //Zoom out by 10
-            gl.Rotate(0, 1, 0, 0); // Rotate about the X axis
-            gl.Rotate(45, 0, 1, 0); // Rotate about the Y axis
+
             gl.PushMatrix();
+            Animate(bufferNum, args);
+            
             gl.EnableClientState(OpenGL.GL_NORMAL_ARRAY);
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, normalBufferObjectIds[bufferNum]);
             gl.NormalPointer(OpenGL.GL_FLOAT, 0, new IntPtr(0));
@@ -92,7 +89,6 @@ namespace CrashedHopeWPF
             gl.VertexAttribPointer(0, 3, OpenGL.GL_FLOAT, false, 0, new IntPtr(0));
 
             gl.DrawElements(OpenGL.GL_TRIANGLES, indices.ElementAt(bufferNum).Length, indices.ElementAt(bufferNum));
-            gl.Translate(0, 0, 0); // move object to centre
            
             gl.PopMatrix();
         }
@@ -100,19 +96,11 @@ namespace CrashedHopeWPF
         private void Animate(int bufferNum, OpenGLEventArgs args)
         {
             OpenGL gl = args.OpenGL;
-            if (baseTime == 0)
-            {
-                baseTime = DateTime.Now.Ticks;
-            }
-            long time = DateTime.Now.Ticks - baseTime;
             if (bufferNum == 1 || bufferNum == 2)
             {
-                gl.Translate(0, -14, 0);
-                gl.Rotate(0, 0, boomRotation);
-                boomRotation = (float)time / 1000000;
-                gl.Translate(0, 14, 0);
-                
+                gl.Rotate(0, boomRotation / 2, boomRotation);
             }
+            boomRotation++;
         }
 
         /// <summary>
