@@ -23,20 +23,27 @@ namespace CrashedHopeWPF
     /// </summary>
     public partial class MainWindow : Window
     {
+        private static int modelsCount = 5;
+
         private Model towerModel;
         private Model boomModel;
         private Model hookModel;
         private Model platformModel;
-        private List<float[]> vertices = new List<float[]>(4);
-        private List<uint[]> indices = new List<uint[]>(4);
-        private List<float[]> normals = new List<float[]>(4);
+        private Model groundModel;
+
+        private List<float[]> vertices = new List<float[]>(modelsCount);
+        private List<uint[]> indices = new List<uint[]>(modelsCount);
+        private List<float[]> normals = new List<float[]>(modelsCount);
 
         private const float G = (float)9.8;
         private float horisontalSpeed = (float)0.0;
 
         // used for storing the id of the vbo
-        uint[] vertexBufferObjectIds = new uint[4];
-        uint[] normalBufferObjectIds = new uint[4];
+        uint[] vertexBufferObjectIds = new uint[modelsCount];
+        uint[] normalBufferObjectIds = new uint[modelsCount];
+
+        float[] light0Diffuse = { 0.7890625f, 0.71484375f, 0.046875f };
+        float[] light0Direction = { 0.0f, 0.0f, 1.0f, 0.0f };
 
         float boomRotation = 0;
 
@@ -61,24 +68,37 @@ namespace CrashedHopeWPF
             gl.LoadIdentity();
 
             gl.LookAt(-20, 20, -20, 0, 10, 0, 0, 1, 0);
+
             // Set the color to
             gl.Color(0.7890625f, 0.71484375f, 0.046875f);
 
+            gl.Enable(OpenGL.GL_LIGHT0);
+            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_DIFFUSE, light0Diffuse);
+            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, light0Direction);
 
-            DrawBuffers(0, args);
-            DrawBuffers(3, args);
-            DrawBuffers(1, args);
-            DrawBuffers(2, args);
+            for (int i = 0; i < modelsCount - 1; i++)
+            {
+                DrawVertexBuffer(i, args);
+            }
+
+            //gl.Color(0.0f, 1.0f, 0.0f);
+            //gl.Vertex(-25.0f, 0.0f, -25.0f);
+            //gl.Vertex(-25.0f, 0.0f, 25.0f);
+            //gl.Vertex(25.0f, 0.0f, -25.0f);
+            //gl.Vertex(25.0f, 0.0f, 25.0f);
+            //gl.Vertex(-25.0f, 0.0f, 25.0f);
+            //gl.Vertex(25.0f, 0.0f, -25.0f);
            
+            gl.Disable(OpenGL.GL_LIGHT0);
         }
 
-        private void DrawBuffers(int bufferNum, OpenGLEventArgs args)
+        private void DrawVertexBuffer(int bufferNum, OpenGLEventArgs args)
         {
             OpenGL gl = args.OpenGL;
 
             gl.PushMatrix();
             Animate(bufferNum, args);
-            
+
             gl.EnableClientState(OpenGL.GL_NORMAL_ARRAY);
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, normalBufferObjectIds[bufferNum]);
             gl.NormalPointer(OpenGL.GL_FLOAT, 0, new IntPtr(0));
@@ -107,7 +127,7 @@ namespace CrashedHopeWPF
         /// Handles the OpenGLInitialized event of the OpenGLControl control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="args">The <see cref="SharpGL.SceneGraph.OpenGLEventArgs"/> instance containing the event data.</param>
+        /// <param name="args">The <see cref="SharpGL.SceneGraph.OpenGLEventArgs"/> instance containing the event data.</param> 
         private void OpenGLControl_OpenGLInitialized(object sender, OpenGLEventArgs args)
         {
             ObjModelLoader modelLoader = new ObjModelLoader();
@@ -115,18 +135,24 @@ namespace CrashedHopeWPF
             boomModel = modelLoader.LoadModel(@"..\..\Resources\Tower crane_boomWithCabin.obj");
             hookModel = modelLoader.LoadModel(@"..\..\Resources\Tower crane_hook.obj");
             platformModel = modelLoader.LoadModel(@"..\..\Resources\Tower crane_platform.obj");
+            groundModel = modelLoader.LoadModel(@"..\..\Resources\ground.obj");
 
             OpenGL gl = args.OpenGL;
 
             gl.ShadeModel(OpenGL.GL_SMOOTH);
 
-            gl.GenBuffers(4, vertexBufferObjectIds);
-            gl.GenBuffers(4, normalBufferObjectIds);
+            gl.GenBuffers(modelsCount, vertexBufferObjectIds);
+            gl.GenBuffers(modelsCount, normalBufferObjectIds);
 
             AddBuffer(towerModel, args, 0);
             AddBuffer(boomModel, args, 1);
             AddBuffer(hookModel, args, 2);
             AddBuffer(platformModel, args, 3);
+            AddBuffer(groundModel, args, 4);
+
+            gl.Enable(OpenGL.GL_LIGHTING);
+            gl.LightModel(OpenGL.GL_LIGHT_MODEL_TWO_SIDE, OpenGL.GL_TRUE);
+            gl.Enable(OpenGL.GL_NORMALIZE);
         }
 
         private void AddBuffer(Model model, OpenGLEventArgs args, int bufferNum)
