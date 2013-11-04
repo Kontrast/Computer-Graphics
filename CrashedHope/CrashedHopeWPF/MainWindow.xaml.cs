@@ -87,7 +87,9 @@ namespace CrashedHopeWPF
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
             gl.LoadIdentity();
 
-            gl.LookAt(-40, 40, -40, 0, 10, 0, 0, 1, 0);
+            //gl.Ortho2D(-100,120,-110,150);
+            //gl.Ortho(-100, 120, -110, 150,10,10);
+            gl.LookAt(-50, 0, 10, 10, 10, 0, 0, 1, 0);
 
             // Set the color to
             gl.Color(0.7890625f, 0.71484375f, 0.046875f);
@@ -173,9 +175,9 @@ namespace CrashedHopeWPF
 
             gl.Enable(OpenGL.GL_COLOR_MATERIAL);
 
-            gl.Enable(OpenGL.GL_LIGHTING);
-            gl.LightModel(OpenGL.GL_LIGHT_MODEL_TWO_SIDE, OpenGL.GL_TRUE);
-            gl.Enable(OpenGL.GL_NORMALIZE);
+            //gl.Enable(OpenGL.GL_LIGHTING);
+            //gl.LightModel(OpenGL.GL_LIGHT_MODEL_TWO_SIDE, OpenGL.GL_TRUE);
+            //gl.Enable(OpenGL.GL_NORMALIZE);
 
             gl.GenBuffers(modelsCount, vertexBufferObjectIds);
             gl.GenBuffers(modelsCount, normalBufferObjectIds);
@@ -294,6 +296,7 @@ namespace CrashedHopeWPF
             {
                 gl.Rotate(90, 90, 0);
             }
+            gl.Translate(-1, 0, 0);
         }
 
         private void AnimationOfObject2(OpenGLEventArgs args)
