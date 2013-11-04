@@ -39,7 +39,12 @@ namespace CrashedHopeWPF
         private DateTime startTime;
         private DateTime phaseOne;
         private DateTime phaseTwo;
-        private double duration1; private const float G = (float)9.8;
+        private double duration1;
+        private double duration2;
+        private float space = 20;
+        private double acceleration;
+
+        private const float G = (float)9.8;
         private float horisontalSpeed = (float)0.0;
 
         // used for storing the id of the vbo
@@ -60,9 +65,12 @@ namespace CrashedHopeWPF
         private void InitializeTimeMarkers(DateTime startDate)
         {
             startTime = startDate;
-            phaseOne = startTime.AddSeconds(10);
+            phaseOne = startTime.AddSeconds(5);
             phaseTwo = phaseOne.AddSeconds(10);
             duration1 = phaseOne.Ticks - startTime.Ticks;
+            duration2 = phaseTwo.Ticks - phaseOne.Ticks;
+            space = 20;
+            acceleration = 2 * space / (duration2 * duration2);
         }
 
         /// <summary>
@@ -141,7 +149,7 @@ namespace CrashedHopeWPF
                     break;
                 case 3: AnimationOfObject3(args);
                     break;
-                default :return;
+                default: return;
             }
         }
 
@@ -280,18 +288,18 @@ namespace CrashedHopeWPF
         private void AnimationOfObject2(OpenGLEventArgs args)
         {
             OpenGL gl = args.OpenGL;
+
             if (DateTime.Now < phaseTwo && DateTime.Now > phaseOne)
             {
-                var a =
-                        (float)
-                        ((phaseOne.Ticks - DateTime.Now.Ticks) / duration1 * 20);
-                gl.Translate(0, a, 0);
+                var a = (float)
+                        ((phaseOne.Ticks - DateTime.Now.Ticks) * (phaseOne.Ticks - DateTime.Now.Ticks) * acceleration / 2);
+                gl.Translate(0, -a, 0);
             }
             else
             {
                 if (DateTime.Now > phaseTwo)
                 {
-                    gl.Translate(0, 20, 0);
+                    gl.Translate(0, -space, 0);
                 }
             }
         }
@@ -327,17 +335,5 @@ namespace CrashedHopeWPF
                 gl.Rotate(90, 0, 0);
             }
         }
-
-        //private void Test0(OpenGLEventArgs args)
-        //{
-        //    OpenGL gl = args.OpenGL;
-
-
-        //    gl.Translate(0, 0, 10);
-        //    var a = 90 -
-        //            (float)
-        //            ((phaseOne.Ticks - DateTime.Now.Ticks) / duration1 * 180);
-        //    gl.Rotate(a, 0, 0);
-        //}
     }
 }
