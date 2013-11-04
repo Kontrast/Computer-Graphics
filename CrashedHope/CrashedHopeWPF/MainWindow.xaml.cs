@@ -29,13 +29,15 @@ namespace CrashedHopeWPF
         private Model boomModel;
         private Model hookModel;
         private Model platformModel;
-        private Model groundModel;
-
         private List<float[]> vertices = new List<float[]>(modelsCount);
         private List<uint[]> indices = new List<uint[]>(modelsCount);
         private List<float[]> normals = new List<float[]>(modelsCount);
+        private Model groundModel;
 
-        private const float G = (float)9.8;
+        private DateTime startTime;
+        private DateTime phaseOne;
+        private DateTime phaseTwo;
+        private double duration1;        private const float G = (float)9.8;
         private float horisontalSpeed = (float)0.0;
 
         // used for storing the id of the vbo
@@ -44,13 +46,18 @@ namespace CrashedHopeWPF
 
         float[] light0Diffuse = { 0.7890625f, 0.71484375f, 0.046875f };
         float[] light0Direction = { 0.0f, 0.0f, 1.0f, 0.0f };
-
-        float boomRotation = 0;
-
-
         public MainWindow()
         {
             InitializeComponent();
+            InitializeTimeMarkers(DateTime.Now.AddSeconds(5));
+        }
+
+        private void InitializeTimeMarkers(DateTime startDate)
+        {
+            startTime = startDate;
+            phaseOne = startTime.AddSeconds(10);
+            phaseTwo = phaseOne.AddSeconds(10);
+            duration1 = phaseOne.Ticks - startTime.Ticks;
         }
 
         /// <summary>
@@ -88,7 +95,7 @@ namespace CrashedHopeWPF
             //gl.Vertex(25.0f, 0.0f, 25.0f);
             //gl.Vertex(-25.0f, 0.0f, 25.0f);
             //gl.Vertex(25.0f, 0.0f, -25.0f);
-           
+
             gl.Disable(OpenGL.GL_LIGHT0);
         }
 
@@ -109,18 +116,27 @@ namespace CrashedHopeWPF
             gl.VertexAttribPointer(0, 3, OpenGL.GL_FLOAT, false, 0, new IntPtr(0));
 
             gl.DrawElements(OpenGL.GL_TRIANGLES, indices.ElementAt(bufferNum).Length, indices.ElementAt(bufferNum));
-           
+
             gl.PopMatrix();
         }
 
         private void Animate(int bufferNum, OpenGLEventArgs args)
         {
             OpenGL gl = args.OpenGL;
-            if (bufferNum == 1 || bufferNum == 2)
+
+            if (bufferNum == 1)
             {
-                gl.Rotate(0, boomRotation / 2, boomRotation);
+                AnimationOfObject1(args);
             }
-            boomRotation++;
+            if (bufferNum == 2)
+            {
+                AnimationOfObject2(args);
+            }
+
+            if (bufferNum == 0)
+            {
+                AnimationOfObject0(args);
+            }
         }
 
         /// <summary>
@@ -217,6 +233,57 @@ namespace CrashedHopeWPF
                     int size = normals.ElementAt(bufferNum).Length * sizeof(float);
                     gl.BufferData(OpenGL.GL_ARRAY_BUFFER, size, ptr, OpenGL.GL_STATIC_DRAW);
                 }
+            }
+        }
+
+        private void AnimationOfObject1(OpenGLEventArgs args)
+        {
+            OpenGL gl = args.OpenGL;
+            if (DateTime.Now < phaseOne)
+            {
+                var a = 90 -
+                        (float)
+                        ((phaseOne.Ticks - DateTime.Now.Ticks) / duration1 * 90);
+                gl.Rotate(0, 0, a);
+            }
+            else
+            {
+                gl.Rotate(0, 0, 90);
+            }
+        }
+
+        private void AnimationOfObject2(OpenGLEventArgs args)
+        {
+            OpenGL gl = args.OpenGL;
+            if (DateTime.Now < phaseTwo && DateTime.Now > phaseOne)
+            {
+                var a =
+                        (float)
+                        ((phaseOne.Ticks - DateTime.Now.Ticks) / duration1 * 20);
+                gl.Translate(0, a, 0);
+            }
+            else
+            {
+                if (DateTime.Now > phaseTwo)
+                {
+                    gl.Translate(0, 20, 0);
+                }
+            }
+        }
+
+        private void AnimationOfObject0(OpenGLEventArgs args)
+        {
+            OpenGL gl = args.OpenGL;
+            if (DateTime.Now < phaseOne)
+            {
+                var a = 90 -
+                        (float)
+                        ((phaseOne.Ticks - DateTime.Now.Ticks) / duration1 * 90);
+                gl.Rotate(a, 0, 0);
+            }
+            else
+            {
+                gl.Rotate(90, 0, 0);
             }
         }
     }
