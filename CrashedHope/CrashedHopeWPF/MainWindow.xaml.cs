@@ -32,18 +32,20 @@ namespace CrashedHopeWPF
         private List<float[]> vertices = new List<float[]>(modelsCount);
         private List<uint[]> indices = new List<uint[]>(modelsCount);
         private List<float[]> normals = new List<float[]>(modelsCount);
+        private List<byte[]> colors = new List<byte[]>(modelsCount);
 
         private Model groundModel;
 
         private DateTime startTime;
         private DateTime phaseOne;
         private DateTime phaseTwo;
-        private double duration1;        private const float G = (float)9.8;
+        private double duration1; private const float G = (float)9.8;
         private float horisontalSpeed = (float)0.0;
 
         // used for storing the id of the vbo
         uint[] vertexBufferObjectIds = new uint[modelsCount];
         uint[] normalBufferObjectIds = new uint[modelsCount];
+        uint[] colorBufferObjectIds = new uint[modelsCount];
 
         float[] light0Diffuse = { 1.0f, 1.0f, 1.0f };
         float[] light0Direction = { 0.0f, 0.0f, 1.0f, 0.0f };
@@ -98,9 +100,9 @@ namespace CrashedHopeWPF
             gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_DIFFUSE, light0Diffuse);
             gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, light0Direction);
 
-            light0Diffuse = new float[]{ 1.0f, 1.0f, 1.0f };
+            light0Diffuse = new float[] { 1.0f, 1.0f, 1.0f };
             //color -= 0.1f;
-            
+
             gl.PushMatrix();
             Animate(bufferNum, args);
 
@@ -112,6 +114,10 @@ namespace CrashedHopeWPF
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, vertexBufferObjectIds[bufferNum]);
             gl.EnableVertexAttribArray(0);
             gl.VertexAttribPointer(0, 3, OpenGL.GL_FLOAT, false, 0, new IntPtr(0));
+
+            gl.EnableClientState(OpenGL.GL_COLOR_ARRAY);
+            gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, colorBufferObjectIds[bufferNum]);
+            gl.ColorPointer(3, OpenGL.GL_UNSIGNED_BYTE, 0, new IntPtr(0));
 
             gl.DrawElements(OpenGL.GL_TRIANGLES, indices.ElementAt(bufferNum).Length, indices.ElementAt(bufferNum));
 
@@ -157,6 +163,7 @@ namespace CrashedHopeWPF
 
             gl.GenBuffers(modelsCount, vertexBufferObjectIds);
             gl.GenBuffers(modelsCount, normalBufferObjectIds);
+            gl.GenBuffers(modelsCount, colorBufferObjectIds);
 
             AddBuffer(towerModel, args, 0);
             AddBuffer(boomModel, args, 1);
@@ -179,6 +186,7 @@ namespace CrashedHopeWPF
             gl.Hint(OpenGL.GL_PERSPECTIVE_CORRECTION_HINT, OpenGL.GL_NICEST);
 
             vertices.Add(new float[model.Data.Vertices.Count() * 3]);
+            colors.Add(new byte[model.Data.Vertices.Count() * 3]);
             indices.Add(new uint[model.Data.Tris.Count() * 3]);
             normals.Add(new float[model.Data.Normals.Count() * 3]);
 
@@ -188,6 +196,9 @@ namespace CrashedHopeWPF
                 vertices.ElementAt(bufferNum)[i] = (float)vertice.X;
                 vertices.ElementAt(bufferNum)[i + 1] = (float)vertice.Y;
                 vertices.ElementAt(bufferNum)[i + 2] = (float)vertice.Z;
+                colors.ElementAt(bufferNum)[i] = 0;
+                colors.ElementAt(bufferNum)[i + 1] = 255;
+                colors.ElementAt(bufferNum)[i + 2] = 0;
                 i += 3;
             }
             i = 0;
@@ -221,6 +232,20 @@ namespace CrashedHopeWPF
                 }
             }
 
+            gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, colorBufferObjectIds[bufferNum]);
+
+            unsafe
+            {
+                fixed (byte* color = colors.ElementAt(bufferNum))
+                {
+                    var ptr = new IntPtr(color);
+                    int size = colors.ElementAt(bufferNum).Length * sizeof(byte);
+                    IntPtr nullPointer = new IntPtr();
+                    gl.BufferData(OpenGL.GL_ARRAY_BUFFER, size, nullPointer, OpenGL.GL_STREAM_DRAW);
+                    gl.BufferSubData(OpenGL.GL_ARRAY_BUFFER, 0, size, ptr);
+                }
+            }
+
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, normalBufferObjectIds[bufferNum]);
 
             unsafe
@@ -242,11 +267,11 @@ namespace CrashedHopeWPF
                 var a = 90 -
                         (float)
                         ((phaseOne.Ticks - DateTime.Now.Ticks) / duration1 * 90);
-                gl.Rotate(0, 0, a);
+                gl.Rotate(a, a, 0);
             }
             else
             {
-                gl.Rotate(0, 0, 90);
+                gl.Rotate(90, 90, 0);
             }
         }
 

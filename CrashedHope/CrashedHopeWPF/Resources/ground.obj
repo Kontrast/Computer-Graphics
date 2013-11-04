@@ -6,23 +6,23 @@ mtllib ground.mtl
 
 
 #
-# ground Mesh Mesh
+# ground Mesh Mesh Mesh
 #
-g ground Mesh Mesh
+g ground Mesh Mesh Mesh
 
 
 #
-# ground Mesh Mesh_ground Mesh_Default_material
+# ground Mesh Mesh Mesh_ground Mesh Mesh_ground Mesh_Default_material
 #
-usemtl ground Mesh Mesh_ground Mesh_Default_material
+usemtl ground Mesh Mesh Mesh_ground Mesh Mesh_ground Mesh_Default_material
 
-v 24.999994 -0.016657 -25.000000
-v 24.999994 -0.016657 25.000000
-v -24.999994 0.016657 -25.000000
-v -24.999994 0.016657 25.000000
-v 24.999994 -0.016657 25.000000
-v -24.999994 0.016657 -25.000000
-vn -0.000666 -1.000000 0.000000
-vn 0.000666 1.000000 0.000000
+v 49.198612 -3.205552 -49.198612
+v 49.198612 -3.205552 50.801388
+v -50.801388 -3.205552 -49.198612
+v -50.801388 -3.205552 50.801388
+v 49.198612 -3.205552 50.801388
+v -50.801388 -3.205552 -49.198612
+vn 0.000000 -1.000000 0.000000
+vn 0.000000 1.000000 0.000000
 f 1//1 2//1 3//1
 f 4//2 5//2 6//2
