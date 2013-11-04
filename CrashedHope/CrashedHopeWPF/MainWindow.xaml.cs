@@ -60,8 +60,8 @@ namespace CrashedHopeWPF
         private void InitializeTimeMarkers(DateTime startDate)
         {
             startTime = startDate;
-            phaseOne = startTime.AddSeconds(10);
-            phaseTwo = phaseOne.AddSeconds(10);
+            phaseOne = startTime.AddSeconds(5);
+            phaseTwo = phaseOne.AddSeconds(5);
             duration1 = phaseOne.Ticks - startTime.Ticks;
         }
 
@@ -163,6 +163,12 @@ namespace CrashedHopeWPF
 
             gl.ShadeModel(OpenGL.GL_SMOOTH);
 
+            gl.Enable(OpenGL.GL_COLOR_MATERIAL);
+
+            gl.Enable(OpenGL.GL_LIGHTING);
+            gl.LightModel(OpenGL.GL_LIGHT_MODEL_TWO_SIDE, OpenGL.GL_TRUE);
+            gl.Enable(OpenGL.GL_NORMALIZE);
+
             gl.GenBuffers(modelsCount, vertexBufferObjectIds);
             gl.GenBuffers(modelsCount, normalBufferObjectIds);
             gl.GenBuffers(modelsCount, colorBufferObjectIds);
@@ -172,10 +178,6 @@ namespace CrashedHopeWPF
             AddBuffer(hookModel, args, 2);
             AddBuffer(platformModel, args, 3);
             AddBuffer(groundModel, args, 4);
-
-            gl.Enable(OpenGL.GL_LIGHTING);
-            gl.LightModel(OpenGL.GL_LIGHT_MODEL_TWO_SIDE, OpenGL.GL_TRUE);
-            gl.Enable(OpenGL.GL_NORMALIZE);
         }
 
         private void AddBuffer(Model model, OpenGLEventArgs args, int bufferNum)
@@ -198,9 +200,18 @@ namespace CrashedHopeWPF
                 vertices.ElementAt(bufferNum)[i] = (float)vertice.X;
                 vertices.ElementAt(bufferNum)[i + 1] = (float)vertice.Y;
                 vertices.ElementAt(bufferNum)[i + 2] = (float)vertice.Z;
-                colors.ElementAt(bufferNum)[i] = 0;
-                colors.ElementAt(bufferNum)[i + 1] = 255;
-                colors.ElementAt(bufferNum)[i + 2] = 0;
+                if (bufferNum < 4)
+                {
+                    colors.ElementAt(bufferNum)[i] = 255;
+                    colors.ElementAt(bufferNum)[i + 1] = 204;
+                    colors.ElementAt(bufferNum)[i + 2] = 51;
+                } 
+                else
+                {
+                    colors.ElementAt(bufferNum)[i] = 177;
+                    colors.ElementAt(bufferNum)[i + 1] = 177;
+                    colors.ElementAt(bufferNum)[i + 2] = 139;
+                }
                 i += 3;
             }
             i = 0;
