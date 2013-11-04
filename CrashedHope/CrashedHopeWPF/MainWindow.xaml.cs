@@ -38,7 +38,7 @@ namespace CrashedHopeWPF
         private DateTime startTime;
         private DateTime phaseOne;
         private DateTime phaseTwo;
-        private double duration1;        private const float G = (float)9.8;
+        private double duration1; private const float G = (float)9.8;
         private float horisontalSpeed = (float)0.0;
 
         // used for storing the id of the vbo
@@ -88,6 +88,11 @@ namespace CrashedHopeWPF
             }
 
             gl.Disable(OpenGL.GL_LIGHT0);
+
+            if (DateTime.Now > phaseTwo.AddSeconds(2))
+            {
+                InitializeTimeMarkers(DateTime.Now.AddSeconds(1));
+            }
         }
 
         private void DrawVertexBuffer(int bufferNum, OpenGLEventArgs args)
@@ -98,9 +103,9 @@ namespace CrashedHopeWPF
             gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_DIFFUSE, light0Diffuse);
             gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, light0Direction);
 
-            light0Diffuse = new float[]{ 1.0f, 1.0f, 1.0f };
+            light0Diffuse = new float[] { 1.0f, 1.0f, 1.0f };
             //color -= 0.1f;
-            
+
             gl.PushMatrix();
             Animate(bufferNum, args);
 
@@ -120,20 +125,17 @@ namespace CrashedHopeWPF
 
         private void Animate(int bufferNum, OpenGLEventArgs args)
         {
-            OpenGL gl = args.OpenGL;
-
-            if (bufferNum == 1)
+            switch (bufferNum)
             {
-                AnimationOfObject1(args);
-            }
-            if (bufferNum == 2)
-            {
-                AnimationOfObject2(args);
-            }
-
-            if (bufferNum == 0)
-            {
-                AnimationOfObject0(args);
+                case 0: AnimationOfObject0(args);
+                    break;
+                case 1: AnimationOfObject1(args);
+                    break;
+                case 2: AnimationOfObject2(args);
+                    break;
+                case 3: AnimationOfObject3(args);
+                    break;
+                default :return;
             }
         }
 
@@ -242,11 +244,11 @@ namespace CrashedHopeWPF
                 var a = 90 -
                         (float)
                         ((phaseOne.Ticks - DateTime.Now.Ticks) / duration1 * 90);
-                gl.Rotate(0, 0, a);
+                gl.Rotate(a, a, 0);
             }
             else
             {
-                gl.Rotate(0, 0, 90);
+                gl.Rotate(90, 90, 0);
             }
         }
 
@@ -284,5 +286,33 @@ namespace CrashedHopeWPF
                 gl.Rotate(90, 0, 0);
             }
         }
+
+        private void AnimationOfObject3(OpenGLEventArgs args)
+        {
+            OpenGL gl = args.OpenGL;
+            if (DateTime.Now < phaseOne)
+            {
+                var a = 90 -
+                        (float)
+                        ((phaseOne.Ticks - DateTime.Now.Ticks) / duration1 * 90);
+                gl.Rotate(a, 0, 0);
+            }
+            else
+            {
+                gl.Rotate(90, 0, 0);
+            }
+        }
+
+        //private void Test0(OpenGLEventArgs args)
+        //{
+        //    OpenGL gl = args.OpenGL;
+
+
+        //    gl.Translate(0, 0, 10);
+        //    var a = 90 -
+        //            (float)
+        //            ((phaseOne.Ticks - DateTime.Now.Ticks) / duration1 * 180);
+        //    gl.Rotate(a, 0, 0);
+        //}
     }
 }
