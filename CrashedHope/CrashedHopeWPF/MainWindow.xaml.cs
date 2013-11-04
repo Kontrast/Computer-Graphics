@@ -32,6 +32,7 @@ namespace CrashedHopeWPF
         private List<float[]> vertices = new List<float[]>(modelsCount);
         private List<uint[]> indices = new List<uint[]>(modelsCount);
         private List<float[]> normals = new List<float[]>(modelsCount);
+
         private Model groundModel;
 
         private DateTime startTime;
@@ -44,8 +45,10 @@ namespace CrashedHopeWPF
         uint[] vertexBufferObjectIds = new uint[modelsCount];
         uint[] normalBufferObjectIds = new uint[modelsCount];
 
-        float[] light0Diffuse = { 0.7890625f, 0.71484375f, 0.046875f };
+        float[] light0Diffuse = { 1.0f, 1.0f, 1.0f };
         float[] light0Direction = { 0.0f, 0.0f, 1.0f, 0.0f };
+
+        private float color = 0.71484375f;
         public MainWindow()
         {
             InitializeComponent();
@@ -74,27 +77,15 @@ namespace CrashedHopeWPF
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
             gl.LoadIdentity();
 
-            gl.LookAt(-20, 20, -20, 0, 10, 0, 0, 1, 0);
+            gl.LookAt(-40, 40, -40, 0, 10, 0, 0, 1, 0);
 
             // Set the color to
             gl.Color(0.7890625f, 0.71484375f, 0.046875f);
 
-            gl.Enable(OpenGL.GL_LIGHT0);
-            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_DIFFUSE, light0Diffuse);
-            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, light0Direction);
-
-            for (int i = 0; i < modelsCount - 1; i++)
+            for (int i = 0; i < modelsCount; i++)
             {
                 DrawVertexBuffer(i, args);
             }
-
-            //gl.Color(0.0f, 1.0f, 0.0f);
-            //gl.Vertex(-25.0f, 0.0f, -25.0f);
-            //gl.Vertex(-25.0f, 0.0f, 25.0f);
-            //gl.Vertex(25.0f, 0.0f, -25.0f);
-            //gl.Vertex(25.0f, 0.0f, 25.0f);
-            //gl.Vertex(-25.0f, 0.0f, 25.0f);
-            //gl.Vertex(25.0f, 0.0f, -25.0f);
 
             gl.Disable(OpenGL.GL_LIGHT0);
         }
@@ -103,6 +94,13 @@ namespace CrashedHopeWPF
         {
             OpenGL gl = args.OpenGL;
 
+            gl.Enable(OpenGL.GL_LIGHT0);
+            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_DIFFUSE, light0Diffuse);
+            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, light0Direction);
+
+            light0Diffuse = new float[]{ 1.0f, 1.0f, 1.0f };
+            //color -= 0.1f;
+            
             gl.PushMatrix();
             Animate(bufferNum, args);
 
