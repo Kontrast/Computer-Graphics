@@ -33,6 +33,7 @@ namespace CrashedHopeWPF
         private List<uint[]> indices = new List<uint[]>(modelsCount);
         private List<float[]> normals = new List<float[]>(modelsCount);
         private List<byte[]> colors = new List<byte[]>(modelsCount);
+        private List<float[]> texCoords = new List<float[]>(modelsCount);
 
         private Model groundModel;
 
@@ -51,11 +52,11 @@ namespace CrashedHopeWPF
         uint[] vertexBufferObjectIds = new uint[modelsCount];
         uint[] normalBufferObjectIds = new uint[modelsCount];
         uint[] colorBufferObjectIds = new uint[modelsCount];
+        uint[] texCoordsBufferObjectIds = new uint[modelsCount];
 
         float[] light0Diffuse = { 1.0f, 1.0f, 1.0f };
         float[] light0Direction = { 0.0f, 0.0f, 1.0f, 0.0f };
 
-        private float color = 0.71484375f;
         public MainWindow()
         {
             InitializeComponent();
@@ -132,6 +133,10 @@ namespace CrashedHopeWPF
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, colorBufferObjectIds[bufferNum]);
             gl.ColorPointer(3, OpenGL.GL_UNSIGNED_BYTE, 0, new IntPtr(0));
 
+            gl.EnableClientState(OpenGL.GL_TEXTURE_COORD_ARRAY);
+            gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, texCoordsBufferObjectIds[bufferNum]);
+            gl.TexCoordPointer(2, OpenGL.GL_FLOAT, 0, new IntPtr(0));
+
             gl.DrawElements(OpenGL.GL_TRIANGLES, indices.ElementAt(bufferNum).Length, indices.ElementAt(bufferNum));
 
             gl.PopMatrix();
@@ -180,6 +185,7 @@ namespace CrashedHopeWPF
             gl.GenBuffers(modelsCount, vertexBufferObjectIds);
             gl.GenBuffers(modelsCount, normalBufferObjectIds);
             gl.GenBuffers(modelsCount, colorBufferObjectIds);
+            gl.GenBuffers(modelsCount, texCoordsBufferObjectIds);
 
             AddBuffer(towerModel, args, 0);
             AddBuffer(boomModel, args, 1);
@@ -201,6 +207,7 @@ namespace CrashedHopeWPF
             colors.Add(new byte[model.Data.Vertices.Count() * 3]);
             indices.Add(new uint[model.Data.Tris.Count() * 3]);
             normals.Add(new float[model.Data.Normals.Count() * 3]);
+            texCoords.Add(new float[model.Data.TexCoords.Count() * 2]);
 
             int i = 0;
             foreach (var vertice in model.Data.Vertices)
@@ -221,6 +228,13 @@ namespace CrashedHopeWPF
                     colors.ElementAt(bufferNum)[i + 2] = 139;
                 }
                 i += 3;
+            }
+            i = 0;
+            foreach (var texCoord in model.Data.TexCoords)
+            {
+                texCoords.ElementAt(bufferNum)[i] = (float) texCoord.X;
+                texCoords.ElementAt(bufferNum)[i + 1] = (float) texCoord.Y;
+                i += 2;
             }
             i = 0;
             foreach (var ind in model.Data.Tris)
@@ -276,6 +290,20 @@ namespace CrashedHopeWPF
                     var ptr = new IntPtr(normal);
                     int size = normals.ElementAt(bufferNum).Length * sizeof(float);
                     gl.BufferData(OpenGL.GL_ARRAY_BUFFER, size, ptr, OpenGL.GL_STATIC_DRAW);
+                }
+            }
+
+            gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, texCoordsBufferObjectIds[bufferNum]);
+
+            unsafe
+            {
+                fixed (float* texCoord = texCoords.ElementAt(bufferNum))
+                {
+                    var ptr = new IntPtr(texCoord);
+                    int size = texCoords.ElementAt(bufferNum).Length * sizeof(float);
+                    IntPtr nullPointer = new IntPtr();
+                    gl.BufferData(OpenGL.GL_ARRAY_BUFFER, size, nullPointer, OpenGL.GL_STATIC_DRAW);
+                    gl.BufferSubData(OpenGL.GL_ARRAY_BUFFER, 0, size, ptr);
                 }
             }
         }
