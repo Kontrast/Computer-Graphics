@@ -57,6 +57,8 @@ namespace CrashedHopeWPF
         float[] light0Diffuse = { 1.0f, 1.0f, 1.0f };
         float[] light0Direction = { 0.0f, 0.0f, 1.0f, 0.0f };
 
+        Texture texture = new Texture();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -115,7 +117,6 @@ namespace CrashedHopeWPF
             gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, light0Direction);
 
             light0Diffuse = new float[] { 1.0f, 1.0f, 1.0f };
-            //color -= 0.1f;
 
             gl.PushMatrix();
             Animate(bufferNum, args);
@@ -154,6 +155,9 @@ namespace CrashedHopeWPF
                     break;
                 case 3: AnimationOfObject3(args);
                     break;
+                case 4:
+                    texture.Bind(args.OpenGL);
+                    break;
                 default: return;
             }
         }
@@ -174,6 +178,8 @@ namespace CrashedHopeWPF
 
             OpenGL gl = args.OpenGL;
 
+            texture.Create(gl, @"..\..\Resources\Crate.bmp");
+
             gl.ShadeModel(OpenGL.GL_SMOOTH);
 
             gl.Enable(OpenGL.GL_COLOR_MATERIAL);
@@ -181,6 +187,7 @@ namespace CrashedHopeWPF
             gl.Enable(OpenGL.GL_LIGHTING);
             gl.LightModel(OpenGL.GL_LIGHT_MODEL_TWO_SIDE, OpenGL.GL_TRUE);
             gl.Enable(OpenGL.GL_NORMALIZE);
+            gl.Enable(OpenGL.GL_TEXTURE_2D);
 
             gl.GenBuffers(modelsCount, vertexBufferObjectIds);
             gl.GenBuffers(modelsCount, normalBufferObjectIds);
