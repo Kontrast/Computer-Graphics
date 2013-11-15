@@ -54,8 +54,8 @@ namespace CrashedHopeWPF
         uint[] colorBufferObjectIds = new uint[modelsCount];
         uint[] texCoordsBufferObjectIds = new uint[modelsCount];
 
-        float[] light0Diffuse = { 1.0f, 1.0f, 1.0f };
-        float[] light0Direction = { 0.0f, 0.0f, 1.0f, 0.0f };
+        float[] light0Diffuse = { 1.0f, 1.0f, 1.0f, 0.0f };
+        float[] light0Direction = { 1.0f, 0.0f, 1.0f, 0.0f };
 
         Texture texture = new Texture();
 
@@ -90,7 +90,7 @@ namespace CrashedHopeWPF
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
             gl.LoadIdentity();
 
-            gl.LookAt(-40, 40, -40, 0, 10, 0, 0, 1, 0);
+            gl.LookAt(-40, 40, -40, 0, 0, 0, 0, 1, 0);
 
             // Set the color to
             gl.Color(0.7890625f, 0.71484375f, 0.046875f);
@@ -116,7 +116,7 @@ namespace CrashedHopeWPF
             gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_DIFFUSE, light0Diffuse);
             gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, light0Direction);
 
-            light0Diffuse = new float[] { 1.0f, 1.0f, 1.0f };
+            light0Diffuse = new float[] { 255.0f, 255.0f, 255.0f };
 
             gl.PushMatrix();
             Animate(bufferNum, args);
@@ -178,7 +178,7 @@ namespace CrashedHopeWPF
 
             OpenGL gl = args.OpenGL;
 
-            texture.Create(gl, @"..\..\Resources\Crate.bmp");
+            texture.Create(gl, @"..\..\Resources\render-checkerboard1.jpg");
 
             gl.ShadeModel(OpenGL.GL_SMOOTH);
 
@@ -187,6 +187,7 @@ namespace CrashedHopeWPF
             gl.Enable(OpenGL.GL_LIGHTING);
             gl.LightModel(OpenGL.GL_LIGHT_MODEL_TWO_SIDE, OpenGL.GL_TRUE);
             gl.Enable(OpenGL.GL_NORMALIZE);
+
             gl.Enable(OpenGL.GL_TEXTURE_2D);
 
             gl.GenBuffers(modelsCount, vertexBufferObjectIds);
@@ -213,8 +214,8 @@ namespace CrashedHopeWPF
             vertices.Add(new float[model.Data.Vertices.Count() * 3]);
             colors.Add(new byte[model.Data.Vertices.Count() * 3]);
             indices.Add(new uint[model.Data.Tris.Count() * 3]);
-            normals.Add(new float[model.Data.Normals.Count() * 3]);
-            texCoords.Add(new float[model.Data.TexCoords.Count() * 2]);
+            normals.Add(new float[model.Data.Tris.Count() * 9]);
+            texCoords.Add(new float[model.Data.Tris.Count() * 6]);
 
             int i = 0;
             foreach (var vertice in model.Data.Vertices)
@@ -227,7 +228,7 @@ namespace CrashedHopeWPF
                     colors.ElementAt(bufferNum)[i] = 255;
                     colors.ElementAt(bufferNum)[i + 1] = 204;
                     colors.ElementAt(bufferNum)[i + 2] = 51;
-                } 
+                }
                 else
                 {
                     colors.ElementAt(bufferNum)[i] = 177;
@@ -236,27 +237,51 @@ namespace CrashedHopeWPF
                 }
                 i += 3;
             }
+
             i = 0;
-            foreach (var texCoord in model.Data.TexCoords)
+            int j = 0;
+            foreach (var tri in model.Data.Tris)
             {
-                texCoords.ElementAt(bufferNum)[i] = (float) texCoord.X;
-                texCoords.ElementAt(bufferNum)[i + 1] = (float) texCoord.Y;
-                i += 2;
+                //normals
+                normals.ElementAt(bufferNum)[i] = (float)model.Data.Normals.ElementAt(tri.P1.Normal).X;
+                normals.ElementAt(bufferNum)[i + 1] = (float)model.Data.Normals.ElementAt(tri.P1.Normal).Y;
+                normals.ElementAt(bufferNum)[i + 2] = (float)model.Data.Normals.ElementAt(tri.P1.Normal).Z;
+                //textures
+                texCoords.ElementAt(bufferNum)[j] = (float)model.Data.TexCoords.ElementAt(tri.P1.TexCoord).X;
+                texCoords.ElementAt(bufferNum)[j + 1] = (float)model.Data.TexCoords.ElementAt(tri.P1.TexCoord).Y;
+
+                i += 3;
+                j += 2;
+
+                //normals
+                normals.ElementAt(bufferNum)[i] = (float)model.Data.Normals.ElementAt(tri.P2.Normal).X;
+                normals.ElementAt(bufferNum)[i + 1] = (float)model.Data.Normals.ElementAt(tri.P2.Normal).Y;
+                normals.ElementAt(bufferNum)[i + 2] = (float)model.Data.Normals.ElementAt(tri.P2.Normal).Z;
+                //textures
+                texCoords.ElementAt(bufferNum)[j] = (float)model.Data.TexCoords.ElementAt(tri.P2.TexCoord).X;
+                texCoords.ElementAt(bufferNum)[j + 1] = (float)model.Data.TexCoords.ElementAt(tri.P2.TexCoord).Y;
+
+                i += 3;
+                j += 2;
+
+                //normals
+                normals.ElementAt(bufferNum)[i] = (float)model.Data.Normals.ElementAt(tri.P3.Normal).X;
+                normals.ElementAt(bufferNum)[i + 1] = (float)model.Data.Normals.ElementAt(tri.P3.Normal).Y;
+                normals.ElementAt(bufferNum)[i + 2] = (float)model.Data.Normals.ElementAt(tri.P3.Normal).Z;
+                //textures
+                texCoords.ElementAt(bufferNum)[j] = (float)model.Data.TexCoords.ElementAt(tri.P3.TexCoord).X;
+                texCoords.ElementAt(bufferNum)[j + 1] = (float)model.Data.TexCoords.ElementAt(tri.P3.TexCoord).Y;
+
+                i += 3;
+                j += 2;
             }
+
             i = 0;
             foreach (var ind in model.Data.Tris)
             {
                 indices.ElementAt(bufferNum)[i] = (uint)ind.P1.Vertex;
                 indices.ElementAt(bufferNum)[i + 1] = (uint)ind.P2.Vertex;
                 indices.ElementAt(bufferNum)[i + 2] = (uint)ind.P3.Vertex;
-                i += 3;
-            }
-            i = 0;
-            foreach (var normal in model.Data.Normals)
-            {
-                normals.ElementAt(bufferNum)[i] = (float)normal.X;
-                normals.ElementAt(bufferNum)[i + 1] = (float)normal.X;
-                normals.ElementAt(bufferNum)[i + 2] = (float)normal.X;
                 i += 3;
             }
 
@@ -296,7 +321,9 @@ namespace CrashedHopeWPF
                 {
                     var ptr = new IntPtr(normal);
                     int size = normals.ElementAt(bufferNum).Length * sizeof(float);
-                    gl.BufferData(OpenGL.GL_ARRAY_BUFFER, size, ptr, OpenGL.GL_STATIC_DRAW);
+                    IntPtr nullPointer = new IntPtr();
+                    gl.BufferData(OpenGL.GL_ARRAY_BUFFER, size, nullPointer, OpenGL.GL_STATIC_DRAW);
+                    gl.BufferSubData(OpenGL.GL_ARRAY_BUFFER, 0, size, ptr);
                 }
             }
 
@@ -312,6 +339,22 @@ namespace CrashedHopeWPF
                     gl.BufferData(OpenGL.GL_ARRAY_BUFFER, size, nullPointer, OpenGL.GL_STATIC_DRAW);
                     gl.BufferSubData(OpenGL.GL_ARRAY_BUFFER, 0, size, ptr);
                 }
+            }
+        }
+
+        private void AddCollor(int bufferNum, int i)
+        {
+            if (bufferNum < 4)
+            {
+                colors.ElementAt(bufferNum)[i] = 255;
+                colors.ElementAt(bufferNum)[i + 1] = 204;
+                colors.ElementAt(bufferNum)[i + 2] = 51;
+            }
+            else
+            {
+                colors.ElementAt(bufferNum)[i] = 255;
+                colors.ElementAt(bufferNum)[i + 1] = 255;
+                colors.ElementAt(bufferNum)[i + 2] = 255;
             }
         }
 
