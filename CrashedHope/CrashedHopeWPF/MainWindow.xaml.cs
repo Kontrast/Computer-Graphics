@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using SharpGL.Enumerations;
 using SharpGL.SceneGraph;
 using SharpGL;
 using ModelParser;
@@ -178,7 +179,7 @@ namespace CrashedHopeWPF
 
             OpenGL gl = args.OpenGL;
 
-            texture.Create(gl, @"..\..\Resources\render-checkerboard1.jpg");
+            texture.Create(gl, @"..\..\Resources\ground-texture04.jpg");
 
             gl.ShadeModel(OpenGL.GL_SMOOTH);
 
@@ -189,6 +190,9 @@ namespace CrashedHopeWPF
             gl.Enable(OpenGL.GL_NORMALIZE);
 
             gl.Enable(OpenGL.GL_TEXTURE_2D);
+
+            gl.Enable(OpenGL.GL_SAMPLE_SHADING);
+            gl.ShadeModel(ShadeModel.Smooth);
 
             gl.GenBuffers(modelsCount, vertexBufferObjectIds);
             gl.GenBuffers(modelsCount, normalBufferObjectIds);
