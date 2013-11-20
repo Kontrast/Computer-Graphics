@@ -58,7 +58,11 @@ namespace CrashedHopeWPF
         float[] light0Diffuse = { 1.0f, 1.0f, 1.0f, 0.0f };
         float[] light0Direction = { 1.0f, 0.0f, 1.0f, 0.0f };
 
+        float[] light1Diffuse = {1.0f, 1.0f, 1.0f};
+        float[] light1Position = {0.0f, 10.0f, 0.0f, 1000.0f};
+
         Texture texture = new Texture();
+        uint[] shadowTex = new uint[1];
 
         public MainWindow()
         {
@@ -86,7 +90,6 @@ namespace CrashedHopeWPF
         {
             OpenGL gl = args.OpenGL;
 
-            //CORNFLOWER BLUE
             gl.ClearColor(0.39f, 0.53f, 0.92f, 1);
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
             gl.LoadIdentity();
@@ -109,27 +112,50 @@ namespace CrashedHopeWPF
             }
         }
 
+        private uint[] Shadow(OpenGLEventArgs args, int width, int height)
+        {
+            OpenGL gl = args.OpenGL;
+
+            uint[] shadowTexture = new uint[1];
+
+            // запросим у OpenGL свободный индекс текстуры
+            gl.GenTextures(1, shadowTexture);
+
+            // сделаем текстуру активной
+            gl.BindTexture(OpenGL.GL_TEXTURE_2D, shadowTexture[0]);
+
+            // установим параметры фильтрации текстуры - линейная фильтрация
+            gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_LINEAR);
+            gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_LINEAR);
+
+            // установим параметры "оборачиваниея" текстуры - отсутствие оборачивания
+            gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP_TO_EDGE);
+            gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP_TO_EDGE);
+
+            // необходимо для использования depth-текстуры как shadow map
+            gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_COMPARE_MODE, OpenGL.GL_COMPARE_REF_TO_TEXTURE);
+
+            // соаздем "пустую" текстуру под depth-данные
+            gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_DEPTH_COMPONENT, width, height, 0, OpenGL.GL_DEPTH_COMPONENT, OpenGL.GL_FLOAT, null);
+
+            return shadowTexture;
+        }
+
         private void DrawVertexBuffer(int bufferNum, OpenGLEventArgs args)
         {
             OpenGL gl = args.OpenGL;
 
-            gl.Enable(OpenGL.GL_LIGHT0);
-            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_DIFFUSE, light0Diffuse);
-            gl.Light(OpenGL.GL_LIGHT0, OpenGL.GL_POSITION, light0Direction);
-
-            light0Diffuse = new float[] { 255.0f, 255.0f, 255.0f };
-
             gl.PushMatrix();
             Animate(bufferNum, args);
-
-            gl.EnableClientState(OpenGL.GL_NORMAL_ARRAY);
-            gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, normalBufferObjectIds[bufferNum]);
-            gl.NormalPointer(OpenGL.GL_FLOAT, 0, new IntPtr(0));
 
             gl.EnableClientState(OpenGL.GL_VERTEX_ARRAY);
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, vertexBufferObjectIds[bufferNum]);
             gl.EnableVertexAttribArray(0);
             gl.VertexAttribPointer(0, 3, OpenGL.GL_FLOAT, false, 0, new IntPtr(0));
+
+            gl.EnableClientState(OpenGL.GL_NORMAL_ARRAY);
+            gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, normalBufferObjectIds[bufferNum]);
+            gl.NormalPointer(OpenGL.GL_FLOAT, 0, new IntPtr(0));
 
             gl.EnableClientState(OpenGL.GL_COLOR_ARRAY);
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, colorBufferObjectIds[bufferNum]);
@@ -141,6 +167,8 @@ namespace CrashedHopeWPF
 
             gl.DrawElements(OpenGL.GL_TRIANGLES, indices.ElementAt(bufferNum).Length, indices.ElementAt(bufferNum));
 
+            gl.BindTexture(OpenGL.GL_TEXTURE_2D, shadowTex[0]);
+            gl.CopyTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, 0, 0, 512, 512);
             gl.PopMatrix();
         }
 
@@ -158,6 +186,7 @@ namespace CrashedHopeWPF
                     break;
                 case 4:
                     texture.Bind(args.OpenGL);
+                    //args.OpenGL.BindTexture(OpenGL.GL_TEXTURE_2D, shadowTex[0]);
                     break;
                 default: return;
             }
@@ -181,7 +210,52 @@ namespace CrashedHopeWPF
 
             texture.Create(gl, @"..\..\Resources\ground-texture04.jpg");
 
-            gl.ShadeModel(OpenGL.GL_SMOOTH);
+            shadowTex = Shadow(args, (int)Application.Current.MainWindow.Height, (int)Application.Current.MainWindow.Width);
+
+            // Framebuffer Object (FBO) для рендера в него буфера глубины
+            uint[] depthFBO = new uint[1];
+            // переменная для получения состояния FBO
+            uint fboStatus;
+
+            // создаем FBO для рендера глубины в текстуру
+            gl.GenFramebuffersEXT(1, depthFBO);
+
+            // делаем созданный FBO текущим
+            gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, depthFBO[0]);
+
+            // отключаем вывод цвета в текущий FBO
+            gl.DrawBuffer(OpenGL.GL_NONE);
+            gl.ReadBuffer(OpenGL.GL_NONE);
+
+            // указываем для текущего FBO текстуру, куда следует производить рендер глубины
+            gl.FramebufferTexture(OpenGL.GL_FRAMEBUFFER_EXT, OpenGL.GL_DEPTH_ATTACHMENT_EXT, shadowTex[0], 0);
+
+            // проверим текущий FBO на корректность
+            if ((fboStatus = gl.CheckFramebufferStatusEXT(OpenGL.GL_FRAMEBUFFER_EXT)) != OpenGL.GL_FRAMEBUFFER_COMPLETE_EXT)
+            {
+                return;
+            }
+
+            // возвращаем FBO по-умолчанию
+            gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
+
+            // установим активный FBO
+            gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, depthFBO[0]);
+
+            // размер вьюпорта должен совпадать с размером текстуры для хранения буфера глубины
+            gl.Viewport(0, 0, (int)Application.Current.MainWindow.Height, (int)Application.Current.MainWindow.Width);
+
+            // отключаем вывод цвета
+            //gl.ColorMask((byte)OpenGL.GL_FALSE, (byte)OpenGL.GL_FALSE, (byte)OpenGL.GL_FALSE, (byte)OpenGL.GL_FALSE);
+
+            // включаем вывод буфера глубины
+            gl.DepthMask((byte)OpenGL.GL_TRUE);
+
+            // очищаем буфер глубины перед его заполнением
+            gl.Clear(OpenGL.GL_DEPTH_BUFFER_BIT);
+
+            // отключаем отображение внешних граней объекта, оставляя внутренние
+            gl.CullFace(OpenGL.GL_FRONT);
 
             gl.Enable(OpenGL.GL_COLOR_MATERIAL);
 
@@ -189,10 +263,11 @@ namespace CrashedHopeWPF
             gl.LightModel(OpenGL.GL_LIGHT_MODEL_TWO_SIDE, OpenGL.GL_TRUE);
             gl.Enable(OpenGL.GL_NORMALIZE);
 
-            gl.Enable(OpenGL.GL_TEXTURE_2D);
+            gl.Enable(OpenGL.GL_LIGHT1);
+            gl.Light(OpenGL.GL_LIGHT1, OpenGL.GL_DIFFUSE, light1Diffuse);
+            gl.Light(OpenGL.GL_LIGHT1, OpenGL.GL_POSITION, light1Position);
 
-            gl.Enable(OpenGL.GL_SAMPLE_SHADING);
-            gl.ShadeModel(ShadeModel.Smooth);
+            gl.Enable(OpenGL.GL_TEXTURE_2D);
 
             gl.GenBuffers(modelsCount, vertexBufferObjectIds);
             gl.GenBuffers(modelsCount, normalBufferObjectIds);
