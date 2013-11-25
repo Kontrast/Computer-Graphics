@@ -111,6 +111,7 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <None Include="Resources\sphere.obj" />
     <None Include="Resources\Tower crane_boomWithCabin.obj" />
     <None Include="Resources\Tower crane_hook.obj" />
     <None Include="Resources\Tower crane_optimized.obj" />
@@ -131,6 +132,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\ground-texture04.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\sky-tex.jpg" />
+    <Resource Include="Resources\sky-tex2.jpg" />
+    <Resource Include="Resources\sky-tex3.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

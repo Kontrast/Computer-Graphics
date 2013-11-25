@@ -24,12 +24,13 @@ namespace CrashedHopeWPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static int modelsCount = 5;
+        private static int modelsCount = 6;
 
         private Model towerModel;
         private Model boomModel;
         private Model hookModel;
         private Model platformModel;
+        private Model skySphereModel;
         private List<float[]> vertices = new List<float[]>(modelsCount);
         private List<uint[]> indices = new List<uint[]>(modelsCount);
         private List<float[]> normals = new List<float[]>(modelsCount);
@@ -59,9 +60,10 @@ namespace CrashedHopeWPF
         float[] light0Direction = { 1.0f, 0.0f, 1.0f, 0.0f };
 
         float[] light1Diffuse = {1.0f, 1.0f, 1.0f};
-        float[] light1Position = {0.0f, 10.0f, 0.0f, 1000.0f};
+        float[] light1Position = {0.0f, 10.0f, 0.0f, 100000.0f};
 
-        Texture texture = new Texture();
+        Texture groundTexture = new Texture();
+        Texture skyTexture = new Texture();
         uint[] shadowTex = new uint[1];
 
         public MainWindow()
@@ -89,13 +91,15 @@ namespace CrashedHopeWPF
         private void OpenGLControl_OpenGLDraw(object sender, OpenGLEventArgs args)
         {
             OpenGL gl = args.OpenGL;
-
+            
             gl.ClearColor(0.39f, 0.53f, 0.92f, 1);
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
+
             gl.LoadIdentity();
-
-            gl.LookAt(-40, 40, -40, 0, 0, 0, 0, 1, 0);
-
+            
+            gl.Ortho(400, -400, 400, -400, 0, -400);
+            gl.LookAt(-1, 1, -1, 0, 0, 0, 0, -1, 0);
+           
             // Set the color to
             gl.Color(0.7890625f, 0.71484375f, 0.046875f);
 
@@ -148,6 +152,13 @@ namespace CrashedHopeWPF
             gl.PushMatrix();
             Animate(bufferNum, args);
 
+            gl.Disable(OpenGL.GL_CLIP_PLANE0);
+            gl.Disable(OpenGL.GL_CLIP_PLANE1);
+            gl.Disable(OpenGL.GL_CLIP_PLANE2);
+            gl.Disable(OpenGL.GL_CLIP_PLANE3);
+            gl.Disable(OpenGL.GL_CLIP_PLANE4);
+            gl.Disable(OpenGL.GL_CLIP_PLANE5);
+
             gl.EnableClientState(OpenGL.GL_VERTEX_ARRAY);
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, vertexBufferObjectIds[bufferNum]);
             gl.EnableVertexAttribArray(0);
@@ -174,6 +185,7 @@ namespace CrashedHopeWPF
 
         private void Animate(int bufferNum, OpenGLEventArgs args)
         {
+            args.OpenGL.Translate(-100, 90, -100);
             switch (bufferNum)
             {
                 case 0: AnimationOfObject0(args);
@@ -185,9 +197,14 @@ namespace CrashedHopeWPF
                 case 3: AnimationOfObject3(args);
                     break;
                 case 4:
-                    texture.Bind(args.OpenGL);
+                    groundTexture.Bind(args.OpenGL);
                     //args.OpenGL.BindTexture(OpenGL.GL_TEXTURE_2D, shadowTex[0]);
                     break;
+                case 5:
+                    args.OpenGL.Scale(200, 200, 200);
+                    skyTexture.Bind(args.OpenGL);
+                    break;
+
                 default: return;
             }
         }
@@ -205,10 +222,13 @@ namespace CrashedHopeWPF
             hookModel = modelLoader.LoadModel(@"..\..\Resources\Tower crane_hook.obj");
             platformModel = modelLoader.LoadModel(@"..\..\Resources\Tower crane_platform.obj");
             groundModel = modelLoader.LoadModel(@"..\..\Resources\ground.obj");
+            skySphereModel = modelLoader.LoadModel(@"..\..\Resources\sphere.obj");
 
             OpenGL gl = args.OpenGL;
 
-            texture.Create(gl, @"..\..\Resources\ground-texture04.jpg");
+            groundTexture.Create(gl, @"..\..\Resources\ground-texture04.jpg");
+
+            skyTexture.Create(gl, @"..\..\Resources\sky-tex3.jpg");
 
             shadowTex = Shadow(args, (int)Application.Current.MainWindow.Height, (int)Application.Current.MainWindow.Width);
 
@@ -279,6 +299,7 @@ namespace CrashedHopeWPF
             AddBuffer(hookModel, args, 2);
             AddBuffer(platformModel, args, 3);
             AddBuffer(groundModel, args, 4);
+            AddBuffer(skySphereModel, args, 5);
         }
 
         private void AddBuffer(Model model, OpenGLEventArgs args, int bufferNum)
