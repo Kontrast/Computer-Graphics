@@ -1,18 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using SharpGL.Enumerations;
 using SharpGL.SceneGraph;
 using SharpGL;
 using ModelParser;
@@ -47,9 +36,6 @@ namespace CrashedHopeWPF
         private float space = 20;
         private double acceleration;
 
-        private const float G = (float)9.8;
-        private float horisontalSpeed = (float)0.0;
-
         // used for storing the id of the vbo
         uint[] vertexBufferObjectIds = new uint[modelsCount];
         uint[] normalBufferObjectIds = new uint[modelsCount];
@@ -70,17 +56,6 @@ namespace CrashedHopeWPF
         {
             InitializeComponent();
             InitializeTimeMarkers(DateTime.Now.AddSeconds(5));
-        }
-
-        private void InitializeTimeMarkers(DateTime startDate)
-        {
-            startTime = startDate;
-            phaseOne = startTime.AddSeconds(5);
-            phaseTwo = phaseOne.AddSeconds(10);
-            duration1 = phaseOne.Ticks - startTime.Ticks;
-            duration2 = phaseTwo.Ticks - phaseOne.Ticks;
-            space = 20;
-            acceleration = 2 * space / (duration2 * duration2);
         }
 
         /// <summary>
@@ -120,6 +95,10 @@ namespace CrashedHopeWPF
         {
             OpenGL gl = args.OpenGL;
 
+            gl.MatrixMode(OpenGL.GL_MODELVIEW_MATRIX);
+            gl.LoadIdentity();
+            gl.Translate(light1Position.ElementAt(0), light1Position.ElementAt(1), light1Position.ElementAt(2));
+            
             uint[] shadowTexture = new uint[1];
 
             // запросим у OpenGL свободный индекс текстуры
@@ -183,31 +162,7 @@ namespace CrashedHopeWPF
             gl.PopMatrix();
         }
 
-        private void Animate(int bufferNum, OpenGLEventArgs args)
-        {
-            args.OpenGL.Translate(-100, 90, -100);
-            switch (bufferNum)
-            {
-                case 0: AnimationOfObject0(args);
-                    break;
-                case 1: AnimationOfObject1(args);
-                    break;
-                case 2: AnimationOfObject2(args);
-                    break;
-                case 3: AnimationOfObject3(args);
-                    break;
-                case 4:
-                    groundTexture.Bind(args.OpenGL);
-                    //args.OpenGL.BindTexture(OpenGL.GL_TEXTURE_2D, shadowTex[0]);
-                    break;
-                case 5:
-                    args.OpenGL.Scale(200, 200, 200);
-                    skyTexture.Bind(args.OpenGL);
-                    break;
-
-                default: return;
-            }
-        }
+        
 
         /// <summary>
         /// Handles the OpenGLInitialized event of the OpenGLControl control.
@@ -230,52 +185,62 @@ namespace CrashedHopeWPF
 
             skyTexture.Create(gl, @"..\..\Resources\sky-tex3.jpg");
 
-            shadowTex = Shadow(args, (int)Application.Current.MainWindow.Height, (int)Application.Current.MainWindow.Width);
+            //Create the shadow map texture
 
-            // Framebuffer Object (FBO) для рендера в него буфера глубины
-            uint[] depthFBO = new uint[1];
-            // переменная для получения состояния FBO
-            uint fboStatus;
+            gl.GenTextures(1, shadowTex);
+            gl.BindTexture(OpenGL.GL_TEXTURE_2D, shadowTex[0]);
+            gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER,OpenGL. GL_NEAREST);
+            gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_NEAREST);
+            gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, OpenGL.GL_CLAMP);
+            gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, OpenGL.GL_CLAMP);
+            gl.TexImage2D(OpenGL.GL_TEXTURE_2D, 0, OpenGL.GL_DEPTH_COMPONENT, 1366, 768, 0, OpenGL.GL_DEPTH_COMPONENT, OpenGL.GL_UNSIGNED_BYTE, null);
 
-            // создаем FBO для рендера глубины в текстуру
-            gl.GenFramebuffersEXT(1, depthFBO);
+            //shadowTex = Shadow(args, (int)Application.Current.MainWindow.Height, (int)Application.Current.MainWindow.Width);
 
-            // делаем созданный FBO текущим
-            gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, depthFBO[0]);
+            //// Framebuffer Object (FBO) для рендера в него буфера глубины
+            //uint[] depthFBO = new uint[1];
+            //// переменная для получения состояния FBO
+            //uint fboStatus;
 
-            // отключаем вывод цвета в текущий FBO
-            gl.DrawBuffer(OpenGL.GL_NONE);
-            gl.ReadBuffer(OpenGL.GL_NONE);
+            //// создаем FBO для рендера глубины в текстуру
+            //gl.GenFramebuffersEXT(1, depthFBO);
 
-            // указываем для текущего FBO текстуру, куда следует производить рендер глубины
-            gl.FramebufferTexture(OpenGL.GL_FRAMEBUFFER_EXT, OpenGL.GL_DEPTH_ATTACHMENT_EXT, shadowTex[0], 0);
+            //// делаем созданный FBO текущим
+            //gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, depthFBO[0]);
 
-            // проверим текущий FBO на корректность
-            if ((fboStatus = gl.CheckFramebufferStatusEXT(OpenGL.GL_FRAMEBUFFER_EXT)) != OpenGL.GL_FRAMEBUFFER_COMPLETE_EXT)
-            {
-                return;
-            }
+            //// отключаем вывод цвета в текущий FBO
+            //gl.DrawBuffer(OpenGL.GL_NONE);
+            //gl.ReadBuffer(OpenGL.GL_NONE);
 
-            // возвращаем FBO по-умолчанию
-            gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
+            //// указываем для текущего FBO текстуру, куда следует производить рендер глубины
+            //gl.FramebufferTexture(OpenGL.GL_FRAMEBUFFER_EXT, OpenGL.GL_DEPTH_ATTACHMENT_EXT, shadowTex[0], 0);
 
-            // установим активный FBO
-            gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, depthFBO[0]);
+            //// проверим текущий FBO на корректность
+            //if ((fboStatus = gl.CheckFramebufferStatusEXT(OpenGL.GL_FRAMEBUFFER_EXT)) != OpenGL.GL_FRAMEBUFFER_COMPLETE_EXT)
+            //{
+            //    return;
+            //}
 
-            // размер вьюпорта должен совпадать с размером текстуры для хранения буфера глубины
-            gl.Viewport(0, 0, (int)Application.Current.MainWindow.Height, (int)Application.Current.MainWindow.Width);
+            //// возвращаем FBO по-умолчанию
+            //gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
 
-            // отключаем вывод цвета
-            //gl.ColorMask((byte)OpenGL.GL_FALSE, (byte)OpenGL.GL_FALSE, (byte)OpenGL.GL_FALSE, (byte)OpenGL.GL_FALSE);
+            //// установим активный FBO
+            //gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, depthFBO[0]);
 
-            // включаем вывод буфера глубины
-            gl.DepthMask((byte)OpenGL.GL_TRUE);
+            //// размер вьюпорта должен совпадать с размером текстуры для хранения буфера глубины
+            //gl.Viewport(0, 0, (int)Application.Current.MainWindow.Height, (int)Application.Current.MainWindow.Width);
 
-            // очищаем буфер глубины перед его заполнением
-            gl.Clear(OpenGL.GL_DEPTH_BUFFER_BIT);
+            //// отключаем вывод цвета
+            ////gl.ColorMask((byte)OpenGL.GL_FALSE, (byte)OpenGL.GL_FALSE, (byte)OpenGL.GL_FALSE, (byte)OpenGL.GL_FALSE);
 
-            // отключаем отображение внешних граней объекта, оставляя внутренние
-            gl.CullFace(OpenGL.GL_FRONT);
+            //// включаем вывод буфера глубины
+            //gl.DepthMask((byte)OpenGL.GL_TRUE);
+
+            //// очищаем буфер глубины перед его заполнением
+            //gl.Clear(OpenGL.GL_DEPTH_BUFFER_BIT);
+
+            //// отключаем отображение внешних граней объекта, оставляя внутренние
+            //gl.CullFace(OpenGL.GL_FRONT);
 
             gl.Enable(OpenGL.GL_COLOR_MATERIAL);
 
@@ -442,19 +407,45 @@ namespace CrashedHopeWPF
             }
         }
 
-        private void AddCollor(int bufferNum, int i)
+        #region Animation
+
+        private void InitializeTimeMarkers(DateTime startDate)
         {
-            if (bufferNum < 4)
+            startTime = startDate;
+            phaseOne = startTime.AddSeconds(5);
+            phaseTwo = phaseOne.AddSeconds(10);
+            duration1 = phaseOne.Ticks - startTime.Ticks;
+            duration2 = phaseTwo.Ticks - phaseOne.Ticks;
+            space = 20;
+            acceleration = 2 * space / (duration2 * duration2);
+        }
+
+        private void Animate(int bufferNum, OpenGLEventArgs args)
+        {
+            args.OpenGL.Translate(-100, 90, -100);
+
+            switch (bufferNum)
             {
-                colors.ElementAt(bufferNum)[i] = 255;
-                colors.ElementAt(bufferNum)[i + 1] = 204;
-                colors.ElementAt(bufferNum)[i + 2] = 51;
-            }
-            else
-            {
-                colors.ElementAt(bufferNum)[i] = 255;
-                colors.ElementAt(bufferNum)[i + 1] = 255;
-                colors.ElementAt(bufferNum)[i + 2] = 255;
+                case 0: AnimationOfObject0(args);
+                    break;
+                case 1: AnimationOfObject1(args);
+                    break;
+                case 2: AnimationOfObject2(args);
+                    break;
+                case 3: AnimationOfObject3(args);
+                    break;
+                case 4:
+                    groundTexture.Bind(args.OpenGL);
+                    args.OpenGL.BindTexture(OpenGL.GL_TEXTURE_2D, shadowTex[0]);
+                    args.OpenGL.CopyTexSubImage2D(OpenGL.GL_TEXTURE_2D, 0, 0, 0, 0, 0, 1366, 768);
+                    //args.OpenGL.BindTexture(OpenGL.GL_TEXTURE_2D, shadowTex[0]);
+                    break;
+                case 5:
+                    args.OpenGL.Scale(200, 200, 200);
+                    skyTexture.Bind(args.OpenGL);
+                    break;
+
+                default: return;
             }
         }
 
@@ -524,5 +515,7 @@ namespace CrashedHopeWPF
                 gl.Rotate(90, 0, 0);
             }
         }
+
+        #endregion
     }
 }
